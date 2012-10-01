@@ -1,0 +1,19 @@
+{
+    "networks": {
+        "example": {"servers": [["irc.example.org", 6667]],
+                    "nick": "trumpet",
+                    "nickserv-password": "secret"}
+    },
+    "web": {
+        "port": 8080
+    },
+    "projects": {
+        "example project": {
+            "channels": {"example": ["#example"]},
+            "bitbucket": {
+                "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url",
+                "token": "my_secret_token"
+             }
+        }
+    }
+}
