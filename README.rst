@@ -19,7 +19,6 @@ Configuration
 
 See `config.sample` for a sample configuration.
 
-
 bitbucket
 ---------
 
@@ -44,6 +43,12 @@ The following variables can be used in ``message``:
 - message: The complete commit message.
 - shortmessage: Only the first line of the commit message.
 - url: URL to the changeset on bitbucket.
+
+
+GitHub
+------
+
+Like bitbucket_, but replace `bitbucket` with `github`.
 
 
 XML-RPC
