@@ -68,8 +68,8 @@ def extract_github_commit(payload, commit_data):
                             ("url", "url")]:
         commit[key] = commit_data[data_key]
     ref = payload["ref"]
-    if ref.startswith("ref/heads/"):
-        ref = ref[len("ref/heads/"):]
+    if ref.startswith("refs/heads/"):
+        ref = ref[len("refs/heads/"):]
     commit["branch"] = ref
     commit["shortmessage"] = short_commit_message(commit["message"])
     return commit
