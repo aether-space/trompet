@@ -49,7 +49,18 @@ The following variables can be used in ``message``:
 XML-RPC
 -------
 
-XXX to be written
+Add the following snippet to you project configuration:
+
+::
+
+   "xmlrpc": {
+       "token": "another secret token!"
+   }
+
+The XML-RPC interface can be reached under
+``http://host:port/xmlrpc``. For sending messages, one can use the
+method ``notify(token, message)``, where `token` is the
+project-specific token you set previously.
 
 
 Usage
