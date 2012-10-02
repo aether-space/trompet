@@ -36,6 +36,15 @@ where ``my_secret_token`` is some random string. You can then point
 your POST Service URL at your bitbucket repository to
 ``http://host:port/token``.
 
+The following variables can be used in ``message``:
+
+- author: The commit's author.
+- branch: The branch into which the commit was pushed.
+- revision: Commit's (short) hash.
+- message: The complete commit message.
+- shortmessage: Only the first line of the commit message.
+- url: URL to the changeset on bitbucket.
+
 
 XML-RPC
 -------
