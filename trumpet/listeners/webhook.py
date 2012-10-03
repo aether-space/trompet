@@ -19,7 +19,7 @@ from trumpet.listeners import registry
 
 def short_commit_message(message):
     "Returns the first line of a commit message."
-    lines = "message".splitlines()
+    lines = message.splitlines()
     shortmessage = lines[0]
     if len(lines) > 1:
         shortmessage += u"…"
