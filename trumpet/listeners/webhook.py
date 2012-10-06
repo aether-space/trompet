@@ -106,9 +106,10 @@ class WebhookListener(resource.Resource):
 class WebhookListenerFactory(object):
     def create(self, service, project, config, observer):
         message_format = string.Template(config["message"])
+        resource = service.get_resource_for_project(project)
         child = WebhookListener(
             project, observer, message_format, self.commit_extractor)
-        service.web.putChild(config["token"], child)
+        resource.putChild(self.name, child)
 
 class BitbucketListenerFactory(WebhookListenerFactory):
     name = u"bitbucket"

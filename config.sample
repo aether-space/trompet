@@ -10,15 +10,14 @@
     "projects": {
         "example project": {
             "channels": {"example": ["#example"]},
+	    "token": "my secret token",
             "bitbucket": {
-                "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url",
-                "token": "my_secret_token"
+                "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url"
             },
 	    "github": {
-                "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url",
-                "token": "github's secret token"
+                "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url"
             },
-	    "xmlrpc": { "token": "another_secret_token" }
+	    "xmlrpc": true
         }
     }
 }

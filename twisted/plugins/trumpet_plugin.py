@@ -12,7 +12,7 @@ from twisted.python import usage
 from twisted.web import resource, server
 from zope.interface import implements
 
-from trumpet import irc, listeners, service as trumpet_service
+from trumpet import irc, service as trumpet_service
 
 class TrumpetOptions(usage.Options):
     def parseArgs(self, *args):
@@ -47,17 +47,13 @@ class TrumpetMaker(object):
         web.setServiceParent(trumpet)
 
         for (project_name, project) in config["projects"].iteritems():
+            try:
+                trumpet.add_project(project_name, project)
+            except trumpet_service.ConfigurationError, e:
+                sys.stderr.write(e.args[0] + "\n")
+                sys.exit(1)
             for (network, channels) in project["channels"].iteritems():
                 networks[network]["channels"].update(channels)
-            for (name, value) in project.iteritems():
-                if name in ["channels", "name"]:
-                    continue
-                try:
-                    listener_factory = listeners.registry.get(name)
-                except KeyError:
-                    sys.stderr.write("Unknown config setting %r\n" % (name, ))
-                    sys.exit(1)
-                listener_factory.create(trumpet, project_name, value, trumpet)
 
         for (name, network) in networks.iteritems():
             (host, port) = random.choice(network["servers"])

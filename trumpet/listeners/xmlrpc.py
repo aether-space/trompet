@@ -6,32 +6,22 @@ from trumpet.listeners import registry
 
 
 class XMLRPCInterface(xmlrpc.XMLRPC):
-    def __init__(self, observer, *args, **kwargs):
+    def __init__(self, project, observer, *args, **kwargs):
         xmlrpc.XMLRPC.__init__(self, *args, **kwargs)
-        self.projects = {}
+        self.project = project
         self.observer = observer
 
-    def register(self, project, token):
-        "Registers the given project under the given token."
-        self.projects[token] = project
-
-    def xmlrpc_notify(self, token, message):
-        try:
-            project = self.projects[token]
-        except KeyError:
-            return False
-        self.observer.notify(project, message)
+    def xmlrpc_notify(self, message):
+        self.observer.notify(self.project, message)
         return True
 
 class ListenerFactory(object):
     name = u"xmlrpc"
 
     def create(self, service, project, config, observer):
-        child = service.web.children.get("xmlrpc")
-        if child is None:
-            child = XMLRPCInterface(observer)
-            service.web.putChild("xmlrpc", child)
-        child.register(project, config["token"])
+        if config:
+            resource = service.get_resource_for_project(project)
+            resource.putChild("xmlrpc", XMLRPCInterface(project, observer))
 
 listener_factory = ListenerFactory()
 registry.register(listener_factory)
