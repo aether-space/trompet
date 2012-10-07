@@ -62,7 +62,8 @@ def format_commit_message(repo, refname, rev):
     return MESSAGE.safe_substitute(**attributes)
 
 def main():
-    bot = ServerProxy('http://%s:%i/xmlrpc' % XMLRPC_ADDR)
+    addr_params = XMLRPC_ADDR + (PROJECT_TOKEN, )
+    bot = ServerProxy('http://%s:%i/%s/xmlrpc' % addr_params)
     repo = os.path.basename(os.getcwd())
     if repo.endswith('.git'):
         repo = repo[:-len('.git')]
@@ -87,7 +88,7 @@ def main():
                 messages.append(
                     'Branch %s/%s deleted (was: %s)' % (repo, refname, old))
     if messages:
-        bot.notify(PROJECT_TOKEN, "\n".join(messages))
+        bot.notify("\n".join(messages))
 
 if __name__ == '__main__':
     main()
