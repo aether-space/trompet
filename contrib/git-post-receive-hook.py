@@ -83,7 +83,7 @@ def main():
                 else:
                     messages.append('New branch: %s/%s' % (repo, refname))
                     messages.append(
-                        format_commit_message(bot, repo, refname, new))
+                        format_commit_message(repo, refname, new))
             else:
                 messages.append(
                     'Branch %s/%s deleted (was: %s)' % (repo, refname, old))
