@@ -17,23 +17,91 @@ trumpet requires Python_ 2.5 or newer (not including any of the Python
 Configuration
 =============
 
+trumpet uses JSON for its configuration file. It's a single JSON
+object with the following keys: networks_, web_ and projects_.
+
 See `config.sample` for a sample configuration.
 
+
+networks
+--------
+
+The IRC networks to which trumpet should connect. Every network
+requires at least the keys `servers` and `nick`. The key
+`nickserv-password` is optional. trumpet uses a randomly chosen item
+out of ``servers`` for connecting.
+
+Example:
+
+::
+
+   "networks": {
+        "example": {
+	    "servers": [["irc.example.org", 6667]],
+            "nick": "trumpet",
+            "nickserv-password": "secret"
+	}
+    }
+
+.. note::
+
+  You might have noticed that no channels are configured for the
+  networks. That is because every project in the projects_ section has
+  a list of channels to which trumpet should announce commits.
+
+
+web
+---
+
+An object with only one key, `port`. Specifies on which port trumpet
+listens to service requests.
+
+Example:
+
+::
+
+   "web": {
+        "port": 8080
+    }
+
+projects
+--------
+
+Each project requires at least the following keys: `channels` and
+`token`. `token` should be a random, not easily guessable string.
+
+Example:
+
+::
+
+   "projects": {
+        "example project": {
+            "channels": {"example": ["#example"]},
+	    "token": "my secret token",
+            "bitbucket": {
+                "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url"
+            },
+	    "xmlrpc": true
+        }
+    }
+
+
+Service listeners
+-----------------
+
 bitbucket
----------
+^^^^^^^^^
 
 Just add something like the following to your project configuration:
 
 ::
 
    "bitbucket": {
-       "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url",
-       "token": "my_secret_token"
+       "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url"
     }
 
-where ``my_secret_token`` is some random string. You can then point
-your POST Service URL at your bitbucket repository to
-``http://host:port/token``.
+You can then point your POST Service URL at your bitbucket repository
+to ``http://host:port/<project token>/bitbucket``.
 
 The following variables can be used in ``message``:
 
@@ -46,26 +114,24 @@ The following variables can be used in ``message``:
 
 
 GitHub
-------
+^^^^^^
 
 Like bitbucket_, but replace `bitbucket` with `github`.
 
 
 XML-RPC
--------
+^^^^^^^
 
 Add the following snippet to you project configuration:
 
 ::
 
-   "xmlrpc": {
-       "token": "another secret token!"
-   }
+   "xmlrpc": true
+
 
 The XML-RPC interface can be reached under
-``http://host:port/xmlrpc``. For sending messages, one can use the
-method ``notify(token, message)``, where `token` is the
-project-specific token you set previously.
+``http://host:port/<project token>/xmlrpc``. For sending messages,
+one can use the method ``notify(message)``.
 
 
 Usage
