@@ -11,12 +11,14 @@ class IRCBot(irc.IRCClient):
         return irc.IRCClient.sendLine(self, line)
 
     def signedOn(self):
+        self.factory.resetDelay()
         if self.factory.nickserv_pw:
             self.msg("NickServ", "IDENTIFY " + self.factory.nickserv_pw)
         for channel in self.factory.channels:
             self.join(channel)
 
-class IRCFactory(protocol.ClientFactory):
+
+class IRCFactory(protocol.ReconnectingClientFactory):
     protocol = IRCBot
 
     def __init__(self, service, network, nickname, channels=None,
