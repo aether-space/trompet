@@ -5,6 +5,7 @@ try:
 except ImportError:
     import simplejson as json
 import random
+import sys
 
 from twisted import plugin
 from twisted.application import internet, service
@@ -101,7 +102,7 @@ class TrumpetMaker(object):
         for (project_name, project) in config["projects"].iteritems():
             try:
                 trumpet.add_project(project_name, project)
-            except trumpet_service.ConfigurationError, e:
+            except ConfigurationError, e:
                 sys.stderr.write(e.args[0] + "\n")
                 sys.exit(1)
             for (network, channels) in project["channels"].iteritems():
