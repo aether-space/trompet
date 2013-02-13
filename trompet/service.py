@@ -10,10 +10,11 @@ import sys
 from twisted import plugin
 from twisted.application import internet, service
 from twisted.python import usage
-from twisted.web import resource, server
+from twisted.web import resource
 from zope.interface import implements
 
 from trompet import irc, listeners
+from trompet.web import create_web_service
 
 
 class ConfigurationError(Exception):
@@ -94,9 +95,7 @@ class TrompetMaker(object):
 
         trompet = Trompet(config)
 
-        trompet.web = resource.Resource()
-        web = internet.TCPServer(config["web"]["port"],
-                                 server.Site(trompet.web))
+        (web, trompet.web) = create_web_service(config)
         web.setServiceParent(trompet)
 
         for (project_name, project) in config["projects"].iteritems():
