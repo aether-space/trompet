@@ -53,14 +53,15 @@ Example:
 web
 ---
 
-An object with only one key, `port`. Specifies on which port trompet
-listens to service requests.
+An object with two keys, `port` and `password`::
 
-Example:
+  * `password` is the password that protects the projects listing page
+  * `port` specifies on which port trompet listens to service requests
 
-::
+Example::
 
    "web": {
+        "password": "secret",
         "port": 8080
     }
 
