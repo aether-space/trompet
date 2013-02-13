@@ -83,9 +83,10 @@ def create_web_service(config):
     "Creates the web service. Returns a tuple (service, site)."
     site = Resource()
     site.putChild("", Root())
+    password = config["web"]["password"]
     portal = Portal(
         ProjectsListingRealm(config),
-        [InMemoryUsernamePasswordDatabaseDontUse(admin=config["password"])])
+        [InMemoryUsernamePasswordDatabaseDontUse(admin=password)])
     credential_factory = DigestCredentialFactory('md5', 'trompet login')
     projects_resource = HTTPAuthSessionWrapper(portal, [credential_factory])
     site.putChild("projects", projects_resource)

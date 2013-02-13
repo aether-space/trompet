@@ -140,7 +140,8 @@ Do I really need to construct the listener URLs by hand?
 Nope, you can point your browser to ``http://host:port/projects`` and
 you'll get a nice list of projects and the corresponding URLs. The
 site requires a username and password. The username is ``admin``, the
-password is the one you set in the configuration (key ``password``).
+password is the one you set in the configuration (section ``web``, key
+``password``).
 
 
 Usage
