@@ -2,7 +2,7 @@
 
 from twisted.web import xmlrpc
 
-from trumpet.listeners import registry
+from trompet.listeners import registry
 
 
 class XMLRPCInterface(xmlrpc.XMLRPC):

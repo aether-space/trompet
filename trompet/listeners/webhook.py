@@ -15,7 +15,7 @@ import string
 
 from twisted.web import resource
 
-from trumpet.listeners import registry
+from trompet.listeners import registry
 
 def short_commit_message(message):
     "Returns the first line of a commit message."

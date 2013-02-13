@@ -13,14 +13,14 @@ from twisted.python import usage
 from twisted.web import resource, server
 from zope.interface import implements
 
-from trumpet import irc, listeners
+from trompet import irc, listeners
 
 
 class ConfigurationError(Exception):
     "Raised when there is an error in the configuration."
 
 
-class Trumpet(service.MultiService):
+class Trompet(service.MultiService):
     """
     The notify service itself.
     """
@@ -67,7 +67,7 @@ class Trumpet(service.MultiService):
                 bot.msg(channel, message)
 
 
-class TrumpetOptions(usage.Options):
+class TrompetOptions(usage.Options):
     def parseArgs(self, *args):
         if len(args) == 1:
             self.config = args[0]
@@ -75,14 +75,14 @@ class TrumpetOptions(usage.Options):
             self.opt_help()
 
     def getSynopsis(self):
-        return 'Usage: twistd [options] trumpet <config file>'
+        return 'Usage: twistd [options] trompet <config file>'
 
-class TrumpetMaker(object):
+class TrompetMaker(object):
     implements(service.IServiceMaker, plugin.IPlugin)
 
-    tapname = "trumpet"
+    tapname = "trompet"
     description = "The commit message spambot."
-    options = TrumpetOptions
+    options = TrompetOptions
 
     def makeService(self, options):
         with open(options.config) as config_file:
@@ -92,16 +92,16 @@ class TrumpetMaker(object):
         for network in networks.values():
             network["channels"] = set()
 
-        trumpet = Trumpet(config)
+        trompet = Trompet(config)
 
-        trumpet.web = resource.Resource()
+        trompet.web = resource.Resource()
         web = internet.TCPServer(config["web"]["port"],
-                                 server.Site(trumpet.web))
-        web.setServiceParent(trumpet)
+                                 server.Site(trompet.web))
+        web.setServiceParent(trompet)
 
         for (project_name, project) in config["projects"].iteritems():
             try:
-                trumpet.add_project(project_name, project)
+                trompet.add_project(project_name, project)
             except ConfigurationError, e:
                 sys.stderr.write(e.args[0] + "\n")
                 sys.exit(1)
@@ -110,11 +110,11 @@ class TrumpetMaker(object):
 
         for (name, network) in networks.iteritems():
             (host, port) = random.choice(network["servers"])
-            factory = irc.IRCFactory(trumpet, name, network["nick"],
+            factory = irc.IRCFactory(trompet, name, network["nick"],
                                      network["channels"],
                                      network.get("nickserv-password", None))
             ircbot = internet.TCPClient(host, port, factory)
             ircbot.setName("irc-" + name)
-            ircbot.setServiceParent(trumpet)
+            ircbot.setServiceParent(trompet)
 
-        return trumpet
+        return trompet

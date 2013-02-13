@@ -17,9 +17,9 @@ def regenerate_dropin_cache():
 
 
 setup(
-    name="trumpet",
+    name="trompet",
     description="The commit announcement IRC bot.",
-    packages=["trumpet", "trumpet.listeners", "trumpet.test","twisted.plugins"],
+    packages=["trompet", "trompet.listeners", "trompet.test", "twisted.plugins"],
     version="0.1",
     author="Andreas Stührk",
     author_email="andreas@buffer.io",
