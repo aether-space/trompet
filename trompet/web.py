@@ -48,9 +48,9 @@ class ProjectsListingRealm(object):
 class ProjectsListing(Resource):
     isLeaf = True
 
-    def __init__(self, config):
+    def __init__(self, trompet):
         Resource.__init__(self)
-        self._config = config
+        self._trompet = trompet
 
     def render_GET(self, request):
         parts = ["""
@@ -62,33 +62,39 @@ class ProjectsListing(Resource):
             <body>
               <ul>
         """]
-        for (name, config) in self._config["projects"].iteritems():
-            parts.append(self._render_project(request, name, config))
+        for project in self._trompet.projects.values():
+            parts.append(self._render_project(request, project))
         parts.append("</ul></body></html>")
         return "".join(parts)
 
-    def _render_project(self, request, project_name, config):
-        parts = ["<li>", project_name.encode("utf-8"), "<ul>"]
+    def _render_project(self, request, project):
+        parts = ["<li>", project.name.encode("utf-8"), "<ul>"]
         root_url = request.prePathURL()[:-len("/projects")]
-        for name in config:
-            if name not in ["channels", "token"]:
-                name = str(name)
-                url = "/".join([root_url, str(config["token"]), name])
-                parts.append('<li><a href="%s">%s</a></li>' % (url, name))
+        for name in project.listeners:
+            name = str(name)
+            url = "/".join([root_url, str(project.token), name])
+            parts.append('<li><a href="%s">%s</a></li>' % (url, name))
         parts.append("</ul></li>")
         return "".join(parts)
 
 
-def create_web_service(config):
-    "Creates the web service. Returns a tuple (service, site)."
-    site = Resource()
-    site.putChild("", Root())
+def create_projects_resource(trompet, config):
     password = config["web"]["password"]
     portal = Portal(
-        ProjectsListingRealm(config),
+        ProjectsListingRealm(trompet),
         [InMemoryUsernamePasswordDatabaseDontUse(admin=password)])
     credential_factory = DigestCredentialFactory('md5', 'trompet login')
-    projects_resource = HTTPAuthSessionWrapper(portal, [credential_factory])
-    site.putChild("projects", projects_resource)
+    return HTTPAuthSessionWrapper(portal, [credential_factory])
+
+
+def create_web_service(trompet, config):
+    "Creates the web service. Returns a tuple (service, site)."
+    site = Resource()
+    trompet.web = site
+    site.putChild("", Root())
     service = internet.TCPServer(config["web"]["port"], server.Site(site))
-    return (service, site)
+    service.setServiceParent(trompet)
+
+
+def reconfigure_web_service(trompet, config):
+    trompet.web.putChild("projects", create_projects_resource(trompet, config))

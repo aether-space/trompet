@@ -5,6 +5,7 @@ try:
 except ImportError:
     import simplejson as json
 import random
+import signal
 import sys
 
 from twisted import plugin
@@ -14,11 +15,23 @@ from twisted.web import resource
 from zope.interface import implements
 
 from trompet import irc, listeners
-from trompet.web import create_web_service
+from trompet.web import create_web_service, reconfigure_web_service
 
 
 class ConfigurationError(Exception):
     "Raised when there is an error in the configuration."
+
+
+class Project(object):
+    def __init__(self, name, token, channels, resource):
+        self.name = name
+        self.token = token
+        self.channels = channels
+        self.resource = resource
+        self.listeners = []
+
+    def __repr__(self):
+        return "<Project(name=%r, token=%r)>" % (self.name, self.token)
 
 
 class Trompet(service.MultiService):
@@ -26,11 +39,12 @@ class Trompet(service.MultiService):
     The notify service itself.
     """
 
-    def __init__(self, config):
+    def __init__(self, maker):
         service.MultiService.__init__(self)
-        self.config = config
-        self.irc = {}
-        self._resources = {}
+        self._maker = maker
+        self._irc = {}
+        self.projects = {}
+        self._previous_sighup_handler = None
 
     def add_project(self, project_name, config):
         if "token" not in config:
@@ -41,7 +55,8 @@ class Trompet(service.MultiService):
             raise ConfigurationError("token %r already used" % (token, ))
         child = resource.Resource()
         self.web.putChild(token, child)
-        self._resources[project_name] = child
+        project = Project(project_name, token, config["channels"], child)
+        self.projects[project_name] = project
         # Configure listeners
         for (name, value) in config.iteritems():
             if name in ["channels", "token"]:
@@ -51,21 +66,47 @@ class Trompet(service.MultiService):
             except KeyError:
                 msg = "Unknown config setting %r for project %r"
                 raise ConfigurationError(msg % (name, project_name))
+            project.listeners.append(name)
             listener_factory.create(self, project_name, value, self)
 
-    def get_resource_for_project(self, project):
+    def add_irc_bot(self, name, bot):
+        self._irc[name] = bot
+
+    def get_irc_bot(self, name):
+        return self._irc[name]
+
+    def get_resource_for_project(self, project_name):
         "Given a project's name, return the corresponding web resource."
-        return self._resources[project]
+        return self.projects[project_name].resource
 
     def notify(self, project_name, message):
         """Inform all IRC channels that are associated with a project
         that something happened.
         """
-        project_config = self.config["projects"][project_name]
+        project_config = self.projects[project_name]
         for (network, channels) in project_config["channels"].iteritems():
             bot = self.irc[network]
             for channel in channels:
                 bot.msg(channel, message)
+
+    def startService(self):
+        service.MultiService.startService(self)
+        if hasattr(signal, "SIGHUP"):
+            self._previous_sighup_handler = signal.signal(
+                signal.SIGHUP, self._handle_sighup)
+
+    def stopService(self):
+        service.MultiService.stopService(self)
+        if self._previous_sighup_handler is not None:
+            signal.signal(signal.SIGHUP, self._previous_sighup_handler)
+
+    def _handle_sighup(self, ignored_signum, ignored_frame):
+        # Clean up all projects
+        for project in self.projects.values():
+            self.web.delEntity(project.token)
+        self.projects.clear()
+        # …then reconfigure (will add the projects again)
+        self._maker.reconfigure(self, self._maker.parse_config())
 
 
 class TrompetOptions(usage.Options):
@@ -78,6 +119,7 @@ class TrompetOptions(usage.Options):
     def getSynopsis(self):
         return 'Usage: twistd [options] trompet <config file>'
 
+
 class TrompetMaker(object):
     implements(service.IServiceMaker, plugin.IPlugin)
 
@@ -86,18 +128,26 @@ class TrompetMaker(object):
     options = TrompetOptions
 
     def makeService(self, options):
-        with open(options.config) as config_file:
+        self.config_path = options.config
+        config = self.parse_config()
+
+        trompet = Trompet(self)
+        create_web_service(trompet, config)
+        self.reconfigure(trompet, config)
+        return trompet
+
+    def parse_config(self):
+        with open(self.config_path) as config_file:
             config = json.load(config_file)
 
-        networks = config["networks"]
-        for network in networks.values():
+        for network in config["networks"].values():
             network["channels"] = set()
+        return config
 
-        trompet = Trompet(config)
+    def reconfigure(self, trompet, config):
+        reconfigure_web_service(trompet, config)
 
-        (web, trompet.web) = create_web_service(config)
-        web.setServiceParent(trompet)
-
+        networks = config["networks"]
         for (project_name, project) in config["projects"].iteritems():
             try:
                 trompet.add_project(project_name, project)
@@ -108,12 +158,17 @@ class TrompetMaker(object):
                 networks[network]["channels"].update(channels)
 
         for (name, network) in networks.iteritems():
-            (host, port) = random.choice(network["servers"])
-            factory = irc.IRCFactory(trompet, name, network["nick"],
-                                     network["channels"],
-                                     network.get("nickserv-password", None))
-            ircbot = internet.TCPClient(host, port, factory)
-            ircbot.setName("irc-" + name)
-            ircbot.setServiceParent(trompet)
-
-        return trompet
+            try:
+                ircbot = trompet.get_irc_bot(name)
+            except KeyError:
+                (host, port) = random.choice(network["servers"])
+                factory = irc.IRCFactory(trompet, name, network["nick"],
+                                         network["channels"],
+                                         network.get("nickserv-password", None))
+                irc_service = internet.TCPClient(host, port, factory)
+                irc_service.setName("irc-" + name)
+                irc_service.setServiceParent(trompet)
+            else:
+                ircbot.factory.reconfigure(
+                    ircbot, network["nick"], network["channels"],
+                    network.get("nickserv-password", None))

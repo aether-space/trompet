@@ -31,7 +31,23 @@ class IRCFactory(protocol.ReconnectingClientFactory):
         self.channels = channels
         self.nickserv_pw = nickserv_pw
 
+    def reconfigure(self, bot, nickname, channels=None, nickserv_pw=None):
+        if nickname != self.nickname:
+            bot.setNick(nickname)
+            self.nickname = nickname
+        if nickserv_pw != self.nickserv_pw:
+            self.nickserv_pw = nickserv_pw
+        new_channels = set(channels or None)
+        current_channels = set(self.channels)
+        to_join = new_channels - current_channels
+        to_leave = current_channels - new_channels
+        for channel in to_leave:
+            bot.leave(channel)
+        for channel in to_join:
+            bot.join(channel)
+        self.channels = channels
+
     def buildProtocol(self, addr):
         p = protocol.ClientFactory.buildProtocol(self, addr)
-        self.service.irc[self.network] = p
+        self.service.add_irc_bot(self.network, p)
         return p

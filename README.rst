@@ -22,6 +22,9 @@ object with the following keys: networks_, web_ and projects_.
 
 See `config.sample` for a sample configuration.
 
+The configuration can be reloaded by sending the signal `SIGHUP` to
+trumpet.
+
 
 networks
 --------
