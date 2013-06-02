@@ -83,9 +83,9 @@ class Trompet(service.MultiService):
         """Inform all IRC channels that are associated with a project
         that something happened.
         """
-        project_config = self.projects[project_name]
-        for (network, channels) in project_config["channels"].iteritems():
-            bot = self.irc[network]
+        project = self.projects[project_name]
+        for (network, channels) in project.channels.iteritems():
+            bot = self._irc[network]
             for channel in channels:
                 bot.msg(channel, message)
 
