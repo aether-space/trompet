@@ -4,6 +4,7 @@ from twisted.words.protocols import irc
 class IRCBot(irc.IRCClient):
     encoding = "utf8"
     nickname = property(lambda self: self.factory.nickname)
+    password = property(lambda self: self.factory.password)
 
     def sendLine(self, line):
         if isinstance(line, unicode):
@@ -22,7 +23,7 @@ class IRCFactory(protocol.ReconnectingClientFactory):
     protocol = IRCBot
 
     def __init__(self, service, network, nickname, channels=None,
-                 nickserv_pw=None):
+                 nickserv_pw=None, password=None):
         if channels is None:
             channels = []
         self.service = service
@@ -30,6 +31,7 @@ class IRCFactory(protocol.ReconnectingClientFactory):
         self.nickname = nickname
         self.channels = channels
         self.nickserv_pw = nickserv_pw
+        self.password = password
 
     def reconfigure(self, bot, nickname, channels=None, nickserv_pw=None):
         if nickname != self.nickname:
