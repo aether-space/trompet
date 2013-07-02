@@ -164,7 +164,8 @@ class TrompetMaker(object):
                 (host, port) = random.choice(network["servers"])
                 factory = irc.IRCFactory(trompet, name, network["nick"],
                                          network["channels"],
-                                         network.get("nickserv-password", None))
+                                         network.get("nickserv-password", None),
+                                         network.get("password", None))
                 irc_service = internet.TCPClient(host, port, factory)
                 irc_service.setName("irc-" + name)
                 irc_service.setServiceParent(trompet)
