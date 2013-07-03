@@ -172,4 +172,5 @@ class TrompetMaker(object):
             else:
                 ircbot.factory.reconfigure(
                     ircbot, network["nick"], network["channels"],
-                    network.get("nickserv-password", None))
+                    network.get("nickserv-password", None),
+                    network.get("password", None))

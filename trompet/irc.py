@@ -33,12 +33,15 @@ class IRCFactory(protocol.ReconnectingClientFactory):
         self.nickserv_pw = nickserv_pw
         self.password = password
 
-    def reconfigure(self, bot, nickname, channels=None, nickserv_pw=None):
+    def reconfigure(self, bot, nickname, channels=None, nickserv_pw=None,
+                    password=None):
         if nickname != self.nickname:
             bot.setNick(nickname)
             self.nickname = nickname
         if nickserv_pw != self.nickserv_pw:
             self.nickserv_pw = nickserv_pw
+        if password != self.password:
+            self.password = password
         new_channels = set(channels or None)
         current_channels = set(self.channels)
         to_join = new_channels - current_channels
