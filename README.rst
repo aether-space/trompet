@@ -30,9 +30,9 @@ networks
 --------
 
 The IRC networks to which trompet should connect. Every network
-requires at least the keys `servers` and `nick`. The key
-`nickserv-password` is optional. trompet uses a randomly chosen item
-out of ``servers`` for connecting.
+requires at least the keys `servers` and `nick`. The keys
+`password` and `nickserv-password` are optional. trompet uses a randomly
+chosen item out of ``servers`` for connecting.
 
 Example:
 
@@ -40,10 +40,11 @@ Example:
 
    "networks": {
         "example": {
-	    "servers": [["irc.example.org", 6667]],
+            "servers": [["irc.example.org", 6667]],
             "nick": "trompet",
+            "password": "The super secret server password",
             "nickserv-password": "secret"
-	}
+        }
     }
 
 .. note::
