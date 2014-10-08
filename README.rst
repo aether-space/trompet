@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/bufferio/trompet.svg?branch=master
+   :target: https://travis-ci.org/bufferio/trompet
+
 =======
 trompet
 =======
