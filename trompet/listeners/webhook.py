@@ -13,7 +13,7 @@ except ImportError:
     import simplejson as json
 import string
 
-from twisted.web import resource
+from twisted.web import http, resource
 
 from trompet.listeners import registry
 
@@ -88,7 +88,7 @@ class WebhookListener(resource.Resource):
 
     def render_POST(self, request):
         if not "payload" in request.args:
-            request.setResponseCode(406)
+            request.setResponseCode(http.BAD_REQUEST)
             return ""
         commits = []
         try:
@@ -96,7 +96,7 @@ class WebhookListener(resource.Resource):
             for data in payload["commits"]:
                 commits.append(self.extract_commit(payload, data))
         except (KeyError, ValueError):
-            request.setResponseCode(406)
+            request.setResponseCode(http.BAD_REQUEST)
         for commit in commits:
             message = self.message_format.safe_substitute(
                 project=self.project, **commit)
