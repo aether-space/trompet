@@ -44,7 +44,7 @@ def extract_bitbucket_commit(payload, commit_data):
                             ("node", "revision"),
                             ("message", "message")]:
         commit[key] = commit_data[data_key]
-    commit["url"] = "http://bitbucket.org%schangeset/%s" % (
+    commit["url"] = "https://bitbucket.org%schangeset/%s" % (
         payload["repository"]["absolute_url"], commit_data["node"])
     commit["shortmessage"] = short_commit_message(commit["message"])
     return commit

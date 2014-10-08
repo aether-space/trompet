@@ -28,6 +28,6 @@ class BitbucketTest(unittest.TestCase):
             "branch": "default",
             "message": "Test commit message",
             "shortmessage": "Test commit message",
-            "url": "http://bitbucket.org/Test/test/changeset/a73056d1d557"
+            "url": "https://bitbucket.org/Test/test/changeset/a73056d1d557"
         }
         self.assertEqual(extract_bitbucket_commit(data, commit_data), expected)
