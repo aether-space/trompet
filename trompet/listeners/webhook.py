@@ -12,10 +12,12 @@ try:
 except ImportError:
     import simplejson as json
 import string
+from itertools import islice
 
 from twisted.web import http, resource
 
 from trompet.listeners import registry
+
 
 def short_commit_message(message):
     "Returns the first line of a commit message."
@@ -79,36 +81,51 @@ class WebhookListener(resource.Resource):
     Resource waiting for a push notification.
     """
 
-    def __init__(self, project, observer, message_format, commit_extractor):
+    def __init__(self, project, observer, message_format, commit_extractor,
+                 max_commits_per_push=None):
         resource.Resource.__init__(self)
         self.project = project
         self.observer = observer
         self.message_format = message_format
         self.extract_commit = commit_extractor
+        self.max_commits_per_push = max_commits_per_push
 
     def render_POST(self, request):
-        if not "payload" in request.args:
+        if "payload" not in request.args:
             request.setResponseCode(http.BAD_REQUEST)
             return ""
-        commits = []
-        try:
-            payload = json.loads(request.args["payload"][0])
-            for data in payload["commits"]:
-                commits.append(self.extract_commit(payload, data))
-        except (KeyError, ValueError):
-            request.setResponseCode(http.BAD_REQUEST)
-        for commit in commits:
+        commits = self._parse_payload(request)
+        for commit in islice(commits, self.max_commits_per_push):
             message = self.message_format.safe_substitute(
                 project=self.project, **commit)
             self.observer.notify(self.project, message)
+        omitted_commits = sum(1 for _ in commits)
+        if omitted_commits:
+            self.observer.notify(
+                self.project, "[%i commits omitted.]" % (omitted_commits, ))
         return ""
+
+    def _parse_payload(self, request):
+        """Parses the request's payload.
+
+        Returns a generator that yields commits. Sets the response code to
+        400 (bad request) if the payload is malformed.
+        """
+        try:
+            payload = json.loads(request.args["payload"][0])
+            for data in payload["commits"]:
+                yield self.extract_commit(payload, data)
+        except (KeyError, ValueError):
+            request.setResponseCode(http.BAD_REQUEST)
+
 
 class WebhookListenerFactory(object):
     def create(self, service, project, config, observer):
         message_format = string.Template(config["message"])
         resource = service.get_resource_for_project(project)
         child = WebhookListener(
-            project, observer, message_format, self.commit_extractor)
+            project, observer, message_format, self.commit_extractor,
+            config.get("max commit messages per push"))
         resource.putChild(self.name, child)
 
 class BitbucketListenerFactory(WebhookListenerFactory):
@@ -118,6 +135,7 @@ class BitbucketListenerFactory(WebhookListenerFactory):
 class GitHubListenerFactory(WebhookListenerFactory):
     name = u"github"
     commit_extractor = staticmethod(extract_github_commit)
+
 
 registry.register(BitbucketListenerFactory())
 registry.register(GitHubListenerFactory())

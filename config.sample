@@ -17,7 +17,8 @@
                 "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url"
             },
             "github": {
-                "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url"
+                "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url",
+                "max commit messages per push": 3
             },
             "xmlrpc": true
         }

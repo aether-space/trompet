@@ -120,6 +120,10 @@ The following variables can be used in ``message``:
 - shortmessage: Only the first line of the commit message.
 - url: URL to the changeset on bitbucket.
 
+If you want to limit the number of commit messages per push, you can
+set the key ``max commit messages per push`` to a numerical value. The
+default value is ``null`` / ``None`` / *unlimited*.
+
 
 GitHub
 ^^^^^^
@@ -161,7 +165,7 @@ trompet is started using `twistd`. Just run
    
    twistd trompet <path to config file>
 
-See `twistd(1)` for additional options.
+See *twistd(1)* for additional options.
 
 
 Reporting Bugs

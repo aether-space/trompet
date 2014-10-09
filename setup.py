@@ -26,6 +26,9 @@ setup(
     install_requires=[
         "twisted"
     ],
+    tests_require=[
+        "mock"
+    ],
     zip_safe=False)
 
 
