@@ -60,10 +60,10 @@ Example:
 web
 ---
 
-An object with two keys, `port` and `password`::
+An object with two keys, `port` and `password`:
 
-  * `password` is the password that protects the projects listing page
-  * `port` specifies on which port trompet listens to service requests
+- `password` is the password that protects the projects listing page
+- `port` specifies on which port trompet listens to service requests
 
 Example::
 
