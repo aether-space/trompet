@@ -76,7 +76,8 @@ projects
 --------
 
 Each project requires at least the following keys: `channels` and
-`token`. `token` should be a random, not easily guessable string.
+`token`. `token` should be a random, not easily guessable string. It
+must consist only of *a-z*, *A-Z*, *0-9*, *_* or *-*.
 
 Example:
 

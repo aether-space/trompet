@@ -12,7 +12,7 @@
     "projects": {
         "example project": {
             "channels": {"example": ["#example"]},
-            "token": "my secret token",
+            "token": "my_secret_token",
             "bitbucket": {
                 "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url"
             },

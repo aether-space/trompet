@@ -5,6 +5,7 @@ try:
 except ImportError:
     import simplejson as json
 import random
+import re
 import signal
 import sys
 
@@ -39,6 +40,8 @@ class Trompet(service.MultiService):
     The notify service itself.
     """
 
+    _valid_token = re.compile('^[a-zA-Z0-9_-]+$').match
+
     def __init__(self, maker):
         service.MultiService.__init__(self)
         self._maker = maker
@@ -47,9 +50,7 @@ class Trompet(service.MultiService):
         self._previous_sighup_handler = None
 
     def add_project(self, project_name, config):
-        if "token" not in config:
-            msg = "Required config setting 'token' not found for project %r"
-            raise ConfigurationError(msg % (project_name, ))
+        self._check_project_config(project_name, config)
         token = config["token"]
         if token in self.web.children:
             raise ConfigurationError("token %r already used" % (token, ))
@@ -107,6 +108,15 @@ class Trompet(service.MultiService):
         self.projects.clear()
         # …then reconfigure (will add the projects again)
         self._maker.reconfigure(self, self._maker.parse_config())
+
+    def _check_project_config(self, project_name, config):
+        if "token" not in config:
+            msg = "Required config setting 'token' not found for project %r"
+            raise ConfigurationError(msg % (project_name, ))
+        elif not self._valid_token(config["token"]):
+            msg = ("Project %r: Invalid value for setting 'token': %r "
+                   "(allowed: a-z, A-Z, 0-9, _, -)")
+            raise ConfigurationError(msg % (project_name, config["token"]))
 
 
 class TrompetOptions(usage.Options):
