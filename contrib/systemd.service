@@ -1,0 +1,17 @@
+# Sample systemd unit file for trompet.
+# You need to change WorkingDirectory and the config path to match your setup.
+
+[Unit]
+Description=IRC bot for commit messages
+After=network.target
+
+[Service]
+Type=forking
+User=trompet
+WorkingDirectory=/checkout/directory
+ExecStart=/usr/bin/twistd trompet config
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+
