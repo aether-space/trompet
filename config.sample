@@ -20,6 +20,10 @@
                 "message": "$author committed rev $revision to $project/$branch: $shortmessage - $url",
                 "max commit messages per push": 3
             },
+            "travisci": {
+                "message": "Travis CI build for $project/$branch, rev $revision: $statusmessage - $reporturl",
+                "token": "Travis CI token"
+            },
             "xmlrpc": true
         }
     }
