@@ -25,3 +25,6 @@ var/
 
 # Tox
 .tox/
+
+# Twisted
+twisted/plugins/dropin.cache
