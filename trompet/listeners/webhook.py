@@ -13,6 +13,7 @@ except ImportError:
     import simplejson as json
 import string
 from itertools import islice
+from hashlib import sha256
 
 from twisted.web import http, resource
 
@@ -119,6 +120,77 @@ class WebhookListener(resource.Resource):
             request.setResponseCode(http.BAD_REQUEST)
 
 
+class TravisCIWebhookListener(resource.Resource):
+    """
+    Resource waiting for a Travis CI push notification.
+    """
+
+    def __init__(self, project, observer, message_format, travis_token):
+        resource.Resource.__init__(self)
+        self.project = project
+        self.observer = observer
+        self.message_format = message_format
+        self.travis_token = travis_token
+
+    def render_POST(self, request):
+        if "payload" not in request.args:
+            request.setResponseCode(http.BAD_REQUEST)
+            return ""
+
+        hashed_token = request.getHeader("Authorization")
+        repo_slug = request.getHeader("Travis-Repo-Slug")
+        if not self._check_authorization(hashed_token, repo_slug):
+            request.setResponseCode(http.UNAUTHORIZED)
+            return ""
+
+        try:
+            payload = json.loads(request.args["payload"][0])
+            buildinfo = self._extract_buildinfo(payload)
+        except (KeyError, ValueError):
+            request.setResponseCode(http.BAD_REQUEST)
+            return ""
+
+        message = self.message_format.safe_substitute(project=self.project,
+                                                      **buildinfo)
+        self.observer.notify(self.project, message)
+        return ""
+
+    def _check_authorization(self, hashed_token, repo_slug):
+        if hashed_token is None or repo_slug is None:
+            return False
+
+        expected_hash = sha256(repo_slug + self.travis_token).hexdigest()
+        return hashed_token == expected_hash
+
+    def _extract_buildinfo(self, payload):
+        """Given the payload from a message from Travis CI's Webhook, extract
+        all relevant data and create an extended commit object. An extended
+        commit object is a dictionary with the following keys:
+
+        - author: The commit's author.
+        - branch: The branch into which the commit was pushed.
+        - revision: Commit's hash.
+        - message: The complete commit message.
+        - shortmessage: Only the first line of the commit message.
+        - url: URL to the changeset on GitHub.
+        - reporturl: URL to the build results at Travis CI.
+        - statusmessage: Travis CI status message.
+        """
+
+        commit = {}
+        for (data_key, key) in [("author_name", "author"),
+                                ("commit", "revision"),
+                                ("message", "message"),
+                                ("compare_url", "url"),
+                                ("branch", "branch"),
+                                ("status_message", "statusmessage"),
+                                ("build_url", "reporturl")]:
+            commit[key] = payload[data_key]
+
+        commit["shortmessage"] = short_commit_message(commit["message"])
+
+        return commit
+
 class WebhookListenerFactory(object):
     def create(self, service, project, config, observer):
         message_format = string.Template(config["message"])
@@ -136,6 +208,17 @@ class GitHubListenerFactory(WebhookListenerFactory):
     name = u"github"
     commit_extractor = staticmethod(extract_github_commit)
 
+class TravisCIListenerFactory(object):
+    name = u"travisci"
+
+    def create(self, service, project, config, observer):
+        message_format = string.Template(config["message"])
+        travis_token = config["token"]
+        resource = service.get_resource_for_project(project)
+        child = TravisCIWebhookListener(project, observer, message_format,
+                                        travis_token)
+        resource.putChild(self.name, child)
 
 registry.register(BitbucketListenerFactory())
 registry.register(GitHubListenerFactory())
+registry.register(TravisCIListenerFactory())

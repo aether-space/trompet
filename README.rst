@@ -131,6 +131,26 @@ GitHub
 
 Like bitbucket_, but replace `bitbucket` with `github`.
 
+Travis CI
+^^^^^^^^^
+
+Similar bitbucket_ and GitHub_., but use `travisci` instead. The following
+additional variables can be used in ``message``:
+
+- reporturl: URL to the build results at Travis CI.
+- statusmessage: Travis CI status message.
+
+Note that Travis CI sends an ``Authorization`` header and the listener checks if
+the header is valid. This check requires the Travis CI token to be present in
+the ``token`` setting in the ``travisci`` configuration block:
+
+::
+
+    "travisci": {
+        "message": "Travis CI build for $project/$branch, rev $revision: $statusmessage - $reporturl",
+        "token": "Travis CI token"
+    }
+
 
 XML-RPC
 ^^^^^^^
